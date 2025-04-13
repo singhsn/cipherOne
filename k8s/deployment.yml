@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cipher1-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cipher1-service
+  template:
+    metadata:
+      labels:
+        app:cipher1-service
+    spec:
+      containers:
+        - name: cipher1-service
+          image: gcr.io/vcc-assignment-3-454617/cipher1-service:latest  # Replace with your actual image path
+          ports:
+            - containerPort: 8098
+        
