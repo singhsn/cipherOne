@@ -10,7 +10,7 @@ spec:
   template:
     metadata:
       labels:
-        app:cipher1-service
+        app: cipher1-service
     spec:
       containers:
         - name: cipher1-service

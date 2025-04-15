@@ -1,6 +1,10 @@
 package com.example.cipherone.service;
 
 import com.example.cipherone.entity.TokenizedDataEntity;
+import com.example.cipherone.mapper.MLResponseParser;
+import com.example.cipherone.mapper.PIIDataMapper;
+import com.example.cipherone.model.MLResponse;
+import com.example.cipherone.model.PIIResponse;
 import com.example.cipherone.model.TokenRequest;
 import com.example.cipherone.repository.TokenizedDataRepository;
 import org.springframework.http.HttpEntity;
@@ -18,7 +22,7 @@ import java.util.Map;
 @Service
 public class CipherOneService {
 
-    private static final String TOKENIZER_SERVICE_URL = "http://localhost:8080/api/tokenizer/generate";
+    private static final String TOKENIZER_SERVICE_URL = "http://34.118.234.25/api/tokenizer/generate";
     private final TokenizedDataRepository repository;
     private final MLIntegrationService mlService;
 
@@ -49,14 +53,8 @@ public class CipherOneService {
         Map<String, String> tokenMap = tokenizedData.get("tokenMap");
 
         // Step 3: Save tokenized data to DB
-        TokenizedDataEntity entity = new TokenizedDataEntity();
-        entity.setName(tokenMap.get(name));
-        entity.setPhoneNumber(tokenMap.get(phone));
-        entity.setEmail(tokenMap.get(email));
-        entity.setAddress(tokenMap.get(address));
-        entity.setTokenizedData("");
-        entity.setOriginalText("");
-        entity.setStatus("PROCESSED");
+        TokenizedDataEntity entity = PIIDataMapper.mapTokenizedData(tokenMap);
+
         repository.save(entity);
 
         return "Data processed and saved successfully!";
@@ -71,9 +69,8 @@ public class CipherOneService {
     private Map<String, Map<String, String>> tokenizePiiData(Map<String, String> piiData) {
         RestTemplate restTemplate = new RestTemplate();
 
-        List<String> piiDataList = new ArrayList<>(piiData.values());
         TokenRequest tokenRequest = new TokenRequest();
-        tokenRequest.setPiiValues(piiDataList);
+        tokenRequest.setPiiMap(piiData);
         // Set headers
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
@@ -102,25 +99,28 @@ public class CipherOneService {
     }
 
     public String processInput(String text) {
-        Map<String, String> piiData = mlService.detectPII(text);
+        String piiDataString = mlService.detectPII(text);
+
+        MLResponse piiData1 = MLResponseParser.parseResponse(piiDataString);
+
+        Map<String, String> piiMap = PIIDataMapper.extractPiiData(piiData1);
 
         // Step 2: Tokenize PII data using Tokenizer Service
-        if (piiData != null && !piiData.isEmpty()) {
-            Map<String, Map<String, String>> tokenizedData = tokenizePiiData(piiData);
+        if (piiMap != null && !piiMap.isEmpty()) {
+            Map<String, Map<String, String>> tokenizedData = tokenizePiiData(piiMap);
             Map<String, String> tokenMap = tokenizedData.get("tokenMap");
 
             // Step 3: Save tokenized data to DB
-            TokenizedDataEntity entity = new TokenizedDataEntity();
-            entity.setName(tokenMap.get("name"));
-            entity.setPhoneNumber(tokenMap.get("phone"));
-            entity.setEmail(tokenMap.get("email"));
-            entity.setAddress(tokenMap.get("address"));
-//            entity.setOriginalText(text);
-//            entity.setTokenizedData(tokenizedData.toString());
-            entity.setStatus("PROCESSED");
+            TokenizedDataEntity entity = PIIDataMapper.mapTokenizedData(tokenMap);
+
+            // Save the entity
             repository.save(entity);
         }
 
         return "Data processed and saved successfully!";
+    }
+
+    public List<TokenizedDataEntity> findAllTokenizedData() {
+        return repository.findAll();
     }
 }

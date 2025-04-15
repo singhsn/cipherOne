@@ -20,7 +20,7 @@ public class MLIntegrationService {
      * @param input The input text to process.
      * @return A Map containing PII data with string keys and string values.
      */
-    public Map<String, String> detectPII(String input) {
+    public String detectPII(String input) {
         // Create RestTemplate instance
         RestTemplate restTemplate = new RestTemplate();
 
@@ -36,18 +36,16 @@ public class MLIntegrationService {
 
         try {
             // Invoke the Python endpoint
-            ResponseEntity<Map> response = restTemplate.exchange(
+            ResponseEntity<String> response = restTemplate.exchange(
                     PYTHON_PII_ENDPOINT,
                     HttpMethod.POST,
                     requestEntity,
-                    Map.class
+                    String.class
             );
 
             // Extract and cast the response body to Map<String, String>
-            @SuppressWarnings("unchecked")
-            Map<String, String> piiData = (Map<String, String>) response.getBody();
+            return response.getBody();
 
-            return piiData;
         } catch (Exception e) {
             // Handle exceptions (e.g., connection errors)
             throw new RuntimeException("Failed to call Python PII detection service: " + e.getMessage(), e);

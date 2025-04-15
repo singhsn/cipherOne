@@ -1,10 +1,13 @@
 package com.example.cipherone.controller;
 
+import com.example.cipherone.entity.TokenizedDataEntity;
 import com.example.cipherone.service.CipherOneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Tag(name = "CipherOne API", description = "Endpoints for PII detection and tokenization")
 @RestController
@@ -37,5 +40,11 @@ public class CipherOneController {
     public String processCsvFile(@RequestParam("file") MultipartFile file) {
         // Implement CSV parsing and processing logic here
         return "CSV processing not implemented yet.";
+    }
+
+    @Operation(summary = "Get all tokenized data records")
+    @GetMapping("/all")
+    public List<TokenizedDataEntity> getAllTokenizedData() {
+        return cipherOneService.findAllTokenizedData();
     }
 }

@@ -1,5 +1,7 @@
 # Use the official OpenJDK 21 image
-FROM openjdk:21-jdk-slim
+#FROM openjdk:21-jdk-slim
+
+FROM --platform=linux/amd64 openjdk:21-jdk-slim
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -11,4 +13,4 @@ COPY target/*.jar cipher1-service.jar
 EXPOSE 8098
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "cipher1-service.jar"]
